@@ -2,7 +2,7 @@
 //throw exampleMinErr('one', 'This {0} is {1}', foo, bar);
 
 var message = 7;
-var temp = minErrCopy("test");
+var temp = minErrCopy("test1");
 try {
 	if (message > 6) throw temp('one', 'This {0} is {1}', "foo", "bar");
 } catch(err) {
@@ -18,21 +18,6 @@ try {
  * @returns {function(code:string, template:string, ...templateArgs): Error} minErr instance
  */
 
-function minErrCopy(name, ErrorConstructor) {
-	ErrorConstructor = ErrorConstructor || Error;
-	return function(code, template) {
-		var SKIP_INDEXES = 2;
-		if (arguments.length < 2) return "Error Can not be generated for" + name;
-		var errCode = code;
-		var errTemplate = template;
-		for (var i = 2; i < arguments.length; i++) {
-			errTemplate = errTemplate.replace("{" + (i - 2) + "}", arguments[i]);	
-		}
-		
-		console.log(errTemplate);
-		return new ErrorConstructor(errTemplate);
-	};
-}
 
 function minErr(module, ErrorConstructor) {
   ErrorConstructor = ErrorConstructor || Error;
@@ -69,21 +54,25 @@ function minErr(module, ErrorConstructor) {
 }
 
 //console.log(toDebugString({}));
-var test = {
+var testObj = {
 	test1 : function(name) {
 		console.log(name);
 	},
 	name : "name1",
 	toString : function() {
 		return this.name;
+	},
+	$nested : {
+		$$nestedName : "xxx",
+		nestedArr : [{1:1},{1:1},{1:1}]
 	}
 };
 
 var testFunc = function(name) {
 	return name;
 }
+
 document = {};
-console.log(testFunc.toString());
 
 function toDebugString(obj) {
   if (typeof obj === 'function') {
@@ -94,10 +83,6 @@ function toDebugString(obj) {
     return serializeObject(obj);
   }
   return obj;
-}
-
-function isUndefined(value) {
-	return typeof value === 'undefined';
 }
 
 function serializeObject(obj) {
@@ -144,3 +129,35 @@ function isWindow(obj) {
 function isScope(obj) {
   return obj && obj.$evalAsync && obj.$watch;
 }
+
+
+function minErrCopy(name, ErrorConstructor) {
+	ErrorConstructor = ErrorConstructor || Error;
+	return function() {
+		var SKIP_INDEXES = 2;
+		var templateArgs = arguments,
+			code = templateArgs[0],
+			message = '[' + (module ? module + ':' : '') + code + '] ',
+			template = templateArgs[1],
+			paramPrefix, i;
+
+		if (arguments.length < 2) return "Error Can not be generated for" + name;
+		var errCode = code;
+		var errTemplate = template;
+		for (var i = 2; i < arguments.length; i++) {
+			errTemplate = errTemplate.replace("{" + (i - 2) + "}", arguments[i]);	
+		}
+		message += errTemplate;
+
+		message += '\nhttp://errors.angularjs.org/1.5.3/' + (module ? module + '/' : '') + code;
+
+    for (i = SKIP_INDEXES, paramPrefix = '?'; i < templateArgs.length; i++, paramPrefix = '&') {
+      message += paramPrefix + 'p' + (i - SKIP_INDEXES) + '=';
+        //encodeURIComponent(toDebugString(templateArgs[i]));
+    }
+		console.log(message);
+		return new ErrorConstructor(errTemplate);
+	};
+}
+
+
