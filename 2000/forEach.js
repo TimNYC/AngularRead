@@ -1,5 +1,10 @@
 var foreach = function(obj, callback, target) {
-  if (typeof obj === 'object') {
+  if (target === null || target === undefined) {
+    target = [];
+  }
+  if (obj === null || obj === undefined) {
+    return obj;
+  } else if (typeof obj === 'object') {
     var keys = Object.keys(obj);
     var key, value;
     for (var i = 0; i < keys.length; i++) {
@@ -20,9 +25,16 @@ var foreach = function(obj, callback, target) {
 
 }
 
+function forEachSorted(obj, iterator, context) {
+  var keys = Object.keys(obj).sort();
+  for (var i = 0; i < keys.length; i++) {
+    iterator.call(context, obj[keys[i]], keys[i]);
+  }
+  return keys;
+}
 var values = {name: 'misko', gender: 'male'};
 var arr = ["zihan", "travis", "albert"];
-var log = [];
+var log = undefined;
 foreach(values, function(value, key) {
   this.push(key + ': ' + value);
 }, log);
